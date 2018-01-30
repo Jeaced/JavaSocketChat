@@ -31,13 +31,31 @@ public class ClientHandler implements Runnable {
                                                 "and type its number", NUMBER_OF_ROOMS));
             setRoom(inputStream.readInt());
             String message;
-            while (true) {
+            while (!stopCondition.get()) {
                 message = inputStream.readUTF();
                 if ("/quit".equals(message)) {
                     outputStream.close();
                     inputStream.close();
+                    client.close();
+                    Server.removeClient(clientID);
+                    return;
+                } else if ("/stop_chat".equals(message)) {
+                    outputStream.close();
+                    inputStream.close();
+                    client.close();
+                    synchronized (clients) {
+                        stopCondition.set(true);
+                    }
+                    return;
+                } else if ("/change_room".equals(message)) {
+                    outputStream.writeUTF(String.format("There are %d rooms. Choose your room " +
+                            "and type its number", NUMBER_OF_ROOMS));
+                    setRoom(inputStream.readInt());
                 }
             }
+            outputStream.close();
+            inputStream.close();
+            client.close();
 
         } catch (IOException e) {
             e.printStackTrace();

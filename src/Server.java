@@ -5,12 +5,14 @@ import java.net.Socket;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Server {
+    private static int curret_clients = 0;
+    private static Thread[] clients;
+
     public static void main(String[] args) {
         int MAX_CLIENTS = 100;
-        int curret_clients = 0;
         ServerSocket serverSocket = null;
-        Socket newClient;
-        Thread[] clients = new Thread[MAX_CLIENTS];
+        Socket newClient = null;
+        clients = new Thread[MAX_CLIENTS];
         try {
             serverSocket = new ServerSocket(9099);
         } catch (IOException e) {
@@ -43,6 +45,22 @@ public class Server {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+        }
+        try {
+            newClient.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void removeClient(int clientID) {
+        if (clients != null) {
+            synchronized (clients) {
+                if (clients[clientID] != null) {
+                    clients[clientID] = null;
+                    curret_clients--;
+                }
             }
         }
     }
