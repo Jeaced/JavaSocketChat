@@ -6,13 +6,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Server {
     private static int curret_clients = 0;
-    private static Thread[] clients;
+    private static ClientHandler[] clients;
 
     public static void main(String[] args) {
         int MAX_CLIENTS = 100;
         ServerSocket serverSocket = null;
         Socket newClient = null;
-        clients = new Thread[MAX_CLIENTS];
+        clients = new ClientHandler[MAX_CLIENTS];
         try {
             serverSocket = new ServerSocket(9099);
         } catch (IOException e) {
@@ -28,13 +28,14 @@ public class Server {
                     DataOutputStream outputStream = new DataOutputStream(newClient.getOutputStream());
                     outputStream.writeUTF("Max amount of clients are connected to the server at" +
                                             "the moment. Retry later.");
+                    outputStream.flush();
                     outputStream.close();
                     newClient.close();
                 } else {
                     for (int i = 0; i < clients.length; i++) {
                         synchronized (clients) {
                             if (clients[i] == null) {
-                                clients[i] = new Thread(new ClientHandler(newClient, clients, i, stopCondition));
+                                clients[i] = new ClientHandler(newClient, clients, i, stopCondition);
                                 clients[i].start();
                                 curret_clients++;
                                 newClient.close();

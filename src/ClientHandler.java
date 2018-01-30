@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ClientHandler implements Runnable {
+public class ClientHandler extends Thread {
 
     private Socket client;
-    private Thread[] clients;
+    private ClientHandler[] clients;
     private DataOutputStream outputStream;
     private DataInputStream inputStream;
     private int roomNumber;
@@ -15,7 +15,7 @@ public class ClientHandler implements Runnable {
     private int clientID;
     private AtomicBoolean stopCondition;
 
-    public ClientHandler(Socket client, Thread[] clients, int clientID, AtomicBoolean stopCondition) {
+    public ClientHandler(Socket client, ClientHandler[] clients, int clientID, AtomicBoolean stopCondition) {
         this.client = client;
         this.clients = clients;
         this.clientID = clientID;
@@ -29,6 +29,7 @@ public class ClientHandler implements Runnable {
             inputStream = new DataInputStream(client.getInputStream());
             outputStream.writeUTF(String.format("There are %d rooms. Choose your room " +
                                                 "and type its number", NUMBER_OF_ROOMS));
+            outputStream.flush();
             setRoom(inputStream.readInt());
             String message;
             while (!stopCondition.get()) {
@@ -50,7 +51,18 @@ public class ClientHandler implements Runnable {
                 } else if ("/change_room".equals(message)) {
                     outputStream.writeUTF(String.format("There are %d rooms. Choose your room " +
                             "and type its number", NUMBER_OF_ROOMS));
+                    outputStream.flush();
                     setRoom(inputStream.readInt());
+                } else {
+                    synchronized (clients) {
+                        for (int i = 0; i < clients.length; i++) {
+                            if (clients[i] != null && clients[i].getRoomNumber() == this.getRoomNumber()) {
+                                DataOutputStream otherOutputStream = clients[i].getOutputStream();
+                                otherOutputStream.writeUTF(message);
+                                otherOutputStream.flush();
+                            }
+                        }
+                    }
                 }
             }
             outputStream.close();
@@ -62,8 +74,15 @@ public class ClientHandler implements Runnable {
         }
 
     }
-
     private void setRoom(int roomNumber) {
         this.roomNumber = roomNumber;
+    }
+
+    public int getRoomNumber() {
+        return roomNumber;
+    }
+
+    public DataOutputStream getOutputStream() {
+        return outputStream;
     }
 }
