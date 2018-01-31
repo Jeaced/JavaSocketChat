@@ -29,8 +29,8 @@ public class Server {
                     outputStream.writeUTF("Max amount of clients are connected to the server at" +
                                             "the moment. Retry later.");
                     outputStream.flush();
-                    outputStream.close();
-                    newClient.close();
+                    //outputStream.close();
+                    //newClient.close();
                 } else {
                     for (int i = 0; i < clients.length; i++) {
                         synchronized (clients) {
@@ -38,7 +38,7 @@ public class Server {
                                 clients[i] = new ClientHandler(newClient, clients, i, stopCondition);
                                 clients[i].start();
                                 curret_clients++;
-                                newClient.close();
+                                //newClient.close();
                                 break;
                             }
                         }
@@ -48,11 +48,14 @@ public class Server {
                 e.printStackTrace();
             }
         }
+        System.exit(0);
+        /*
         try {
             newClient.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        */
     }
 
     public static void removeClient(int clientID) {

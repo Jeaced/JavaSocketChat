@@ -30,20 +30,32 @@ public class ClientHandler extends Thread {
             outputStream.writeUTF(String.format("There are %d rooms. Choose your room " +
                                                 "and type its number", NUMBER_OF_ROOMS));
             outputStream.flush();
-            setRoom(inputStream.readInt());
+            setRoom(Integer.parseInt(inputStream.readUTF()));
+            outputStream.writeUTF(String.format("You are now connected to room %d. Type /change_room" +
+                                                " if you want to change your room", roomNumber));
+            outputStream.flush();
             String message;
             while (!stopCondition.get()) {
                 message = inputStream.readUTF();
                 if ("/quit".equals(message)) {
-                    outputStream.close();
-                    inputStream.close();
-                    client.close();
+                    //outputStream.close();
+                    //inputStream.close();
+                    //client.close();
                     Server.removeClient(clientID);
                     return;
                 } else if ("/stop_chat".equals(message)) {
-                    outputStream.close();
-                    inputStream.close();
-                    client.close();
+                    //outputStream.close();
+                    //inputStream.close();
+                    //client.close();
+                    synchronized (clients) {
+                        for (int i = 0; i < clients.length; i++) {
+                            if (clients[i] != null) {
+                                DataOutputStream otherOutputStream = clients[i].getOutputStream();
+                                otherOutputStream.writeUTF(message);
+                                otherOutputStream.flush();
+                            }
+                        }
+                    }
                     synchronized (clients) {
                         stopCondition.set(true);
                     }
@@ -52,11 +64,13 @@ public class ClientHandler extends Thread {
                     outputStream.writeUTF(String.format("There are %d rooms. Choose your room " +
                             "and type its number", NUMBER_OF_ROOMS));
                     outputStream.flush();
-                    setRoom(inputStream.readInt());
+                    setRoom(Integer.parseInt(inputStream.readUTF()));
+                    outputStream.writeUTF(String.format("You are now connected to room %d", roomNumber));
+                    outputStream.flush();
                 } else {
                     synchronized (clients) {
                         for (int i = 0; i < clients.length; i++) {
-                            if (clients[i] != null && clients[i].getRoomNumber() == this.getRoomNumber()) {
+                            if (clients[i] != null && clients[i].getRoomNumber() == this.getRoomNumber() && i != clientID) {
                                 DataOutputStream otherOutputStream = clients[i].getOutputStream();
                                 otherOutputStream.writeUTF(message);
                                 otherOutputStream.flush();
@@ -65,9 +79,9 @@ public class ClientHandler extends Thread {
                     }
                 }
             }
-            outputStream.close();
-            inputStream.close();
-            client.close();
+            //outputStream.close();
+            //inputStream.close();
+            //client.close();
 
         } catch (IOException e) {
             e.printStackTrace();

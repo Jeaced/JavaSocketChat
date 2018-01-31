@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class Client implements Runnable {
+public class ClientCopy implements Runnable {
     private DataInputStream dataInputStream;
     private static boolean stop;
 
-    private Client(DataInputStream dataInputStream) {
+    private ClientCopy(DataInputStream dataInputStream) {
         this.dataInputStream = dataInputStream;
     }
 
@@ -18,7 +18,7 @@ public class Client implements Runnable {
             Socket socket = new Socket("127.0.0.1", 9099);
             DataInputStream inputStream = new DataInputStream(socket.getInputStream());
             DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
-            Thread readingThread = new Thread(new Client(inputStream));
+            Thread readingThread = new Thread(new ClientCopy(inputStream));
             readingThread.start();
             Scanner scanner = new Scanner(System.in);
             String message = "";
@@ -44,7 +44,6 @@ public class Client implements Runnable {
             try {
                 message = dataInputStream.readUTF();
                 if ("/quit".equals(message) || "/stop_chat".equals(message)) {
-                    System.exit(0);
                     return;
                 } else {
                     System.out.println(message);
